@@ -3,7 +3,7 @@
 ### Intelligent automatic information extraction system from WWW sites
 
 **Opis:**
-Celem projektu magisterskiego jest stworzenie inteligentnego automatycznego systemu, który będzie przeszukiwał wszystkie strony parafii i zakonów w Polsce i wydobywał z nich godziny mszy świętych. System będzie udostępniał wyszukiwarkę online.
+Celem projektu magisterskiego jest stworzenie inteligentnego automatycznego systemu, który będzie przeszukiwał wszystkie strony parafii oraz zakonów w Polsce i wydobywał z nich godziny mszy świętych. System będzie udostępniał wyszukiwarkę online.
 
 Praca magisterska omawiać będzie budowę tego typu systemów oraz algorytmy ekstrakcji danych.
 
