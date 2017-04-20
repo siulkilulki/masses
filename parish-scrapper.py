@@ -17,14 +17,7 @@ class ParishScraper(object):
     def _scrap(self):
         parishes = []
         for page_nr in range(1, 11000):
-            page = requests.get(self.website_prefix + str(page_nr))
-            sleep_time = 2
-            while page.status_code == 500:
-                print('Status code 500 error')
-                sleep_time = sleep_time**2
-                print('Waiting ' + str(sleep_time) + ' sec')
-                time.sleep(sleep_time)
-                page = requests.get(self.website_prefix + str(page_nr))
+            page = self._get_page_stubbornly(page_nr)
             if 'id' in page.url:
                 page_nr += 1
                 parish = self._retrieve_info(page)
@@ -32,6 +25,22 @@ class ParishScraper(object):
                 print('\n')
                 parishes.append(parish)
         return parishes
+
+    def _get_page_stubbornly(self, page_nr):
+        sleep_time = 1
+        while True:
+            try:
+                page = requests.get(
+                    self.website_prefix + str(page_nr), timeout=10)
+                if page.status_code == 500:
+                    print('Status code 500 error')
+                    raise ConnectionError
+                return page
+            except:
+                sleep_time = sleep_time * 2 if sleep_time < 60 else 60
+                print('Waiting ' + str(sleep_time) + ' sec')
+                time.sleep(sleep_time)
+                continue
 
     def _retrieve_info(self, page):
         page.encoding = 'utf-8'
