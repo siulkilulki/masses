@@ -3,7 +3,7 @@
 ### Intelligent automatic information extraction system from WWW sites
 
 **Opis:**
-Celem projektu magisterskiego jest stworzenie inteligentnego automatycznego systemu, który będzie przeszukiwał wszystkie strony parafii i zakonów w Polsce i wydobywał z nich godziny mszy świętych. System będzie udostępniał wyszukiwarkę online.
+Celem projektu magisterskiego jest stworzenie inteligentnego automatycznego systemu, który będzie przeszukiwał wszystkie strony parafii oraz zakonów w Polsce i wydobywał z nich godziny mszy świętych. System będzie udostępniał wyszukiwarkę online.
 
 Praca magisterska omawiać będzie budowę tego typu systemów oraz algorytmy ekstrakcji danych.
 
@@ -14,12 +14,10 @@ Cambridge University Press. 2008.
 * __Information extraction__
 Jim Cowie, Wendy Lehnert
 Communications of the ACM, Volume 39 Issue 1, Jan. 1996, Pages 80-91
-* __Effective Information Extraction with Semantic Affinity Patterns and
-Relevant Regions__
+* __Effective Information Extraction with Semantic Affinity Patterns and Relevant Regions__
 Siddharth Patwardhan, Ellen Riloff
 School of Computing University of Utah. 2007
-* __Automatically Generating Extraction Patterns from Untagged Text
-__
+* __Automatically Generating Extraction Patterns from Untagged Text__
 Ellen Riloff
 Department of Computer Science, University of Utah. 1996
 * __Information extraction as a basis for high-precision text classification__
