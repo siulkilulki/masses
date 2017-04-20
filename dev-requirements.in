@@ -1,0 +1,7 @@
+pip-tools
+jedi
+rope
+importmagic
+autopep8
+yapf
+ipdb
