@@ -11,7 +11,7 @@ class Proxy():
         self.proxies = [] if proxies is None else proxies
 
     def download(self):
-        driver = webdriver.Chrome()
+        driver = webdriver.Chrome('./chromedriver')
         driver.maximize_window()
         driver.get('http://www.gatherproxy.com/proxylist/anonymity/?t=elite')
         full_list_button = driver.find_element_by_xpath(
