@@ -17,7 +17,7 @@ class Proxy():
         full_list_button = driver.find_element_by_xpath(
             '//input[@type="submit" and @value="Show Full List"]')
         full_list_button.click()
-        print(driver.page_source)
+        #print(driver.page_source)
         for match in re.finditer(
                 '<a href="#(.*?)" class="inactive" onclick="gp.pageClick',
                 driver.page_source):

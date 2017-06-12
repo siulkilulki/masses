@@ -1,3 +1,5 @@
 requests
 dill
-dryscrape
+beautifulsoup4
+lxml
+selenium

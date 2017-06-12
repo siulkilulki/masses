@@ -4,9 +4,8 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
+beautifulsoup4==4.6.0
 dill==0.2.6
-dryscrape==1.0
-lxml==3.8.0               # via dryscrape
+lxml==3.8.0
 requests==2.13.0
-webkit-server==1.0        # via dryscrape
-xvfbwrapper==0.2.9        # via dryscrape
+selenium==3.4.3
