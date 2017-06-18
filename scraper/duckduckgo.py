@@ -45,7 +45,9 @@ class DuckDuckGo(object):
                 proxy_dict = self._proxy_to_dict(proxy)
 
                 self.falitures += 1
-                if self.falitures > 0.95 * len(self.proxy_obj.proxies):
+                total_nr_of_proxies = len(
+                    self.proxy_obj.proxies) + self.falitures
+                if self.falitures > 0.95 * total_nr_ofproxies:
                     if self.download:
                         self.download_proxies()
                         self.download = False
