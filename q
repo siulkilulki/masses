@@ -1,3 +1,0 @@
-requests
-dill
-dryscrape
