@@ -34,17 +34,15 @@ class DuckDuckGo(object):
             try:
                 resp = requests.post(link, proxies=proxy_dict, timeout=2)
                 print(proxy_dict)
+                self._verbose_print()
                 self.golden_proxies.append(proxy)
                 return resp
             except:
-                print('Nr of falitures: ' + str(self.falitures) + ' Proxies: '
-                      + str(len(self.proxy_obj.proxies)) + ' Golden proxies: '
-                      + str(len(self.golden_proxies)))
                 self.proxy_obj.proxies.remove(proxy)
                 proxy = self.proxy_obj.random()
                 proxy_dict = self._proxy_to_dict(proxy)
-
                 self.falitures += 1
+                self._verbose_print()
                 total_nr_of_proxies = len(
                     self.proxy_obj.proxies) + self.falitures
                 if self.falitures > 0.95 * total_nr_of_proxies:
@@ -55,6 +53,11 @@ class DuckDuckGo(object):
                     self.falitures = 0
                     self.proxy_obj.proxies.extend(self.golden_proxies)
                     del self.golden_proxies[:]
+
+    def _verbose_print(self):
+        print('Nr of falitures: ' + str(self.falitures) + ' Proxies: ' +
+              str(len(self.proxy_obj.proxies)) + ' Golden proxies: ' +
+              str(len(self.golden_proxies)))
 
     def _proxy_to_dict(self, proxy):
         proxy_string = str(proxy[0]) + ':' + str(proxy[1])

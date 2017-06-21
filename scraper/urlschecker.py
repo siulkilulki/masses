@@ -26,7 +26,7 @@ class ParishUrlChecker():
             return False
         for link in links:
             link = self._get_true_url(link)
-            if parish_url == link:
+            if self._compare_urls(parish_url, link):
                 t_parish_url = parish_url + '\n'
                 self.urls += t_parish_url
                 t_tsv = parish['name'] + '\t' + parish_url + '\t' + parish['city'] + '\t' + parish['street'] + '\t' + parish['postal_code'] + '\t' + parish['meta_url'] + '\t' + parish['gps'] + '\n'
@@ -46,6 +46,9 @@ class ParishUrlChecker():
                 return True  # mark as ok url
         #print(links)
         return False
+
+    def _compare_urls(self, url_1, url_2):
+        return self._convert_url(url_1) == self._convert_url(url_2)
 
     def _convert_url(self, url):
         if url.endswith('/'):
@@ -67,7 +70,6 @@ class ParishUrlChecker():
                 return new_url
             except:
                 pass
-        print('Falied url: ' + url)
         return ''
 
 
@@ -88,13 +90,9 @@ def main():
     i = 1
     switch = True
     for parish in parishes:
-        print(i)
-        if '10511' in parish['meta_url']:
-            switch = False
-        if switch:
-            continue
         if parish['url']:
-            urls_checker.check(parish, duck)
+            if not urls_checker.check(parish, duck):
+                print('Not found: ' + parish['url'])
         else:
             print('none')
             print(
@@ -104,10 +102,6 @@ def main():
                     (urls_checker.added /
                      (urls_checker.tried_urls or 1)) * 100) + '%')
         i += 1
-    with open('urls_checked.txt', 'w') as f:
-        f.write(urls)
-    with open('parishes_checked.tsv', 'w') as f:
-        f.write(tsv)
 
 
 if __name__ == "__main__":

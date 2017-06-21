@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium import common
 import re
 import random
+import time
 
 
 # TODO: export path with geckodriver or chromedriver automatically and put driver in project files
@@ -39,8 +40,7 @@ class Proxy():
             try:
                 driver.execute_script('gp.pageClick(' + str(i) + ')')
             except common.exceptions.WebDriverException:
-                import ipdb
-                ipdb.set_trace()
+                time.sleep(1)
                 driver.execute_script('gp.pageClick(' + str(i) + ')')
             print(i)
 
