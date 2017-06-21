@@ -86,7 +86,13 @@ def main():
         parishes = pickle.load(f)
 
     i = 1
+    switch = True
     for parish in parishes:
+        print(i)
+        if '10511' in parish['meta_url']:
+            switch = False
+        if switch:
+            continue
         if parish['url']:
             urls_checker.check(parish, duck)
         else:
