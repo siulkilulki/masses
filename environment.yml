@@ -1,0 +1,14 @@
+name: polish-masses
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - scrapy
+  - pip:
+    - lxml
+    - tldextract
+    - requests
+    - beautifulsoup4
+    - python-google-places
+    - jsonlines
+    - ipdb
