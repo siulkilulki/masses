@@ -5,7 +5,10 @@ include /tmp/makeenv
 
 .PHONY: all clean
 
-all: parishes-deon.txt
+all: parishes-with-urls.tsv
+
+parishes-with-urls.tsv: apikey.txt parishes-deon.tsv
+	./get_parishes_urls -a $< -p $(word 2,$^)
 
 parishes-deon.tsv:
 	./crawl_deon.py > $@
@@ -21,7 +24,7 @@ annotated-poznan.tsv:
 	./crawl_poznan.py > $@ 2> error_poznan
 
 clean:
-	rm -rf parishes-deon.txt
+	rm -rf parishes-deon.tsv
 
 update:
 	conda env update -f ../environment.yml

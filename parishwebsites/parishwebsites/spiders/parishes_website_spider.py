@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 import scrapy
 import tldextract
 import re
@@ -30,32 +29,20 @@ class ParishesSpider(CrawlSpider):
         self.allowed_domains = _get_allowed_domains(self.start_urls)
 
     def parse_start_url(self, response):
-        soup = BeautifulSoup(response.text, 'lxml')
-        [
-            s.extract()
-            for s in soup(['style', 'script', '[document]', 'head', 'title'])
-        ]
         link_text = response.meta[
             'link_text'] if 'link_text' in response.meta else ''
-        button_soup = BeautifulSoup(link_text, 'lxml')
-        [
-            s.extract()
-            for s in button_soup(
-                ['style', 'script', '[document]', 'head', 'title'])
-        ]
-
         previous_url = response.meta[
             'previous_url'] if 'previous_url' in response.meta else ''
 
         yield {
             "url": response.url,
             "depth": response.meta['depth'],
-            "button_text": button_soup.get_text(separator='\n', strip=True),
+            "button_text": link_text
             "previous_url": previous_url,
             "original_start_url": self.original_url,
             "start_url": self.start_urls[0],
             "domain": self.allowed_domains[0],
-            "content": soup.get_text(separator='\n', strip=True)
+            "content": response.text 
         }
 
     def _requests_to_follow(self, response):
@@ -78,4 +65,7 @@ class ParishesSpider(CrawlSpider):
     def closed(self, reason):
         if reason == 'finished':
             with open('./processed.txt', mode='a', encoding='utf-8') as f:
+                print(self.original_url, file=f)
+        else:
+            with open('./not-processed.txt', mode='a', encoding='utf-8') as f:
                 print(self.original_url, file=f)
