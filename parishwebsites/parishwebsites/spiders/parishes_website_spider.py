@@ -20,7 +20,16 @@ def _get_allowed_domains(urls):
 
 class ParishesSpider(CrawlSpider):
     name = "parishes"
-    rules = (Rule(LinkExtractor(), callback='parse_start_url', follow=True), )
+    deny_regex = [
+        'wikipedia', 'facebook',
+        'http://www\.sluzew\.dominikanie\.pl/nagrania/',
+        'http://pasierbiec.info/parafia-z-sercem/\?replytocom=',
+        'http://www\.swzygmunt\.knc\.pl/(GALLERIES|galerie)', '^http.*\.flv$'
+    ]
+    rules = (Rule(
+        LinkExtractor(deny=deny_regex),
+        callback='parse_start_url',
+        follow=True), )
 
     def __init__(self, *args, **kwargs):
         super(ParishesSpider, self).__init__(*args, **kwargs)
@@ -37,12 +46,12 @@ class ParishesSpider(CrawlSpider):
         yield {
             "url": response.url,
             "depth": response.meta['depth'],
-            "button_text": link_text
+            "button_text": link_text,
             "previous_url": previous_url,
             "original_start_url": self.original_url,
             "start_url": self.start_urls[0],
             "domain": self.allowed_domains[0],
-            "content": response.text 
+            "content": response.text
         }
 
     def _requests_to_follow(self, response):

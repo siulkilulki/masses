@@ -13,3 +13,4 @@ dependencies:
     - jsonlines
     - ipdb
     - colorama
+    - html2text
