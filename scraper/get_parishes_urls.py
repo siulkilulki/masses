@@ -119,7 +119,7 @@ def main():
     apikey = args.apikey.read().rstrip('\n')  # TODO: should be apikey file
     args.apikey.close()
 
-    outputfile_path = './extended.tsv'
+    outputfile_path = './parishes-with-urls.tsv' # TODO: move to parameters
     nr_of_outputfile_lines = count_file_number_of_lines(outputfile_path)
 
     header = next(args.parishes).rstrip('\n').split('\t')
@@ -136,8 +136,8 @@ def main():
             if not parish:
                 NullPlace = namedtuple('NullPlace', ['website', 'place_id'])
                 parish = NullPlace('', '')
-        except:
-            logging.info('Probably limit exceeded. Exiting.')
+        except Exception as e:
+            logging.info('Probably limit exceeded. Exiting.\nException: {}'.format(e))
             # write_last_line_to_file(outputfile_path, line_nr)
             return
         add_parish_info(row, parish, result)
