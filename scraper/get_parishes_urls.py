@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import traceback
 import sys
 from googleplaces import GooglePlaces, lang, GooglePlacesError, Place
 # import jsonlines
@@ -137,6 +138,7 @@ def main():
                 NullPlace = namedtuple('NullPlace', ['website', 'place_id'])
                 parish = NullPlace('', '')
         except Exception as e:
+            traceback.print_stack()
             logging.info('Probably limit exceeded. Exiting.\nException: {}'.format(e))
             # write_last_line_to_file(outputfile_path, line_nr)
             return

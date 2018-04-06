@@ -14,7 +14,7 @@ parishwebsites/spider-commands.txt: parishes-with-urls.tsv
 	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u > $@
 
 parishes-with-urls.tsv: apikey.txt parishes-deon.tsv scraper/get_parishes_urls.py
-	scraper/get_parishes_urls.py -a $< -p $(word 2,$^) > $@ 2> get-parishes-urls.log
+	scraper/get_parishes_urls.py -a $< -p $(word 2,$^) >> $@ 2> get-parishes-urls.log
 
 parishes-deon.tsv: scraper/crawl_deon.py
 	scraper/crawl_deon.py > $@ 2> crawl-deon.log

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from time import sleep
 import requests
 from string import Template
 import re
@@ -21,7 +22,7 @@ def get_address(url):
 
 
 def process_page(url):
-    page = requests.get(url, timeout=10)
+    page = requests.get(url, timeout=30)
     soup = BeautifulSoup(page.text, 'html.parser')
     for td in soup.find_all('td', class_='temat'):
         href = td.a['href']
@@ -38,7 +39,16 @@ def process_page(url):
             address, td_diocese.get_text(strip=True), td_decanate.get_text(
                 strip=True), td_province.get_text(strip=True)
         ]))
-
+def retry_download(url, sleep_time = 0):
+    try:
+        process_page(url)
+    except Exception as e:
+        if sleep_time == 0:
+            sleep_time = 1.5 
+        logging.info(e)
+        logging.info('Waiting {}s.\n'.format(sleep_time))
+        sleep(sleep_time)
+        retry_download(url, sleep_time * 1.5)
 
 def main():
     base_url = 'https://www.deon.pl/parafie-koscioly/'
@@ -47,10 +57,10 @@ def main():
     print('\t'.join([
         'Parafia', 'Miejscowość', 'Adres', 'Diecezja', 'Dekanat', 'Województwo'
     ]))
-    process_page(base_url)
+    retry_download(base_url)
     for i in range(2, 1014):  # TODO: add search for last page nr on deon
         url = base_url + suffix.substitute(page=str(i))
-        process_page(url)
+        retry_download(url)
         logging.info(i)
 
 
