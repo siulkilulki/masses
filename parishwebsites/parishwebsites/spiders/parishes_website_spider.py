@@ -6,7 +6,7 @@ from scrapy.linkextractors import LinkExtractor
 import requests
 from scrapy import signals
 from scrapy.http import HtmlResponse
-
+from binaryornot.helpers import is_binary_string
 
 def _get_allowed_domains(urls):
     domains = []
@@ -17,17 +17,15 @@ def _get_allowed_domains(urls):
         domains.append(domain)
     return domains
 
+def get_deny_domains():
+    with open('domain-blacklist.txt') as f:
+        blacklisted_domains = [line.rstrip('\n') for line in f]
+    return blacklisted_domains
 
 class ParishesSpider(CrawlSpider):
     name = "parishes"
-    deny_regex = [
-        'wikipedia', 'facebook',
-        'http://www\.sluzew\.dominikanie\.pl/nagrania/',
-        'http://pasierbiec.info/parafia-z-sercem/\?replytocom=',
-        'http://www\.swzygmunt\.knc\.pl/(GALLERIES|galerie)', '^http.*\.flv$'
-    ]
     rules = (Rule(
-        LinkExtractor(deny=deny_regex),
+        LinkExtractor(deny_domains=get_deny_domains()),
         callback='parse_start_url',
         follow=True), )
 
@@ -43,16 +41,17 @@ class ParishesSpider(CrawlSpider):
         previous_url = response.meta[
             'previous_url'] if 'previous_url' in response.meta else ''
 
-        yield {
-            "url": response.url,
-            "depth": response.meta['depth'],
-            "button_text": link_text,
-            "previous_url": previous_url,
-            "original_start_url": self.original_url,
-            "start_url": self.start_urls[0],
-            "domain": self.allowed_domains[0],
-            "content": response.text
-        }
+        if not is_binary_string(response.text.encode('utf-8')[:2048]):
+            yield {
+                "url": response.url,
+                "depth": response.meta['depth'],
+                "button_text": link_text,
+                "previous_url": previous_url,
+                "original_start_url": self.original_url,
+                "start_url": self.start_urls[0],
+                "domain": self.allowed_domains[0],
+                "content": response.text
+            }
 
     def _requests_to_follow(self, response):
         if not isinstance(response, HtmlResponse):

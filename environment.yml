@@ -1,5 +1,6 @@
 name: polish-masses
 channels:
+  - defaults
   - conda-forge
 dependencies:
   - python
@@ -14,3 +15,4 @@ dependencies:
     - ipdb
     - colorama
     - html2text
+    - binaryornot

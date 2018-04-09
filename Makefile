@@ -7,11 +7,11 @@ JOBS := 6
 
 all: data
 
-data: parishwebsites/spider-commands.txt
+data: parishwebsites/spider-commands.txt parishwebsites/domain-blacklist.txt
 	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands.txt 2> crawler-log.txt
 
-parishwebsites/spider-commands.txt: parishes-with-urls.tsv
-	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u > $@
+parishwebsites/spider-commands.txt: parishes-with-urls.tsv parishwebsites/domain-blacklist.txt
+	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u | parishwebsites/remove_blacklisted.py $(word 2,$^) > $@
 
 parishes-with-urls.tsv: apikey.txt parishes-deon.tsv scraper/get_parishes_urls.py
 	scraper/get_parishes_urls.py -a $< -p $(word 2,$^) >> $@ 2> get-parishes-urls.log
