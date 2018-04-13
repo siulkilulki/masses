@@ -1,13 +1,14 @@
 SHELL := /bin/bash
 PREPARE_ENVIRONMENT := $(shell ./prepare-environment.sh > /tmp/makeenv)
 include /tmp/makeenv
-JOBS := 6
+JOBS := 40
 
 .PHONY: all update data clean clean-data
 
 all: data
 
 data: parishwebsites/spider-commands.txt parishwebsites/domain-blacklist.txt
+	rm -f parishwebsites/*processed.txt
 	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands.txt 2> crawler-log.txt
 
 parishwebsites/spider-commands.txt: parishes-with-urls.tsv parishwebsites/domain-blacklist.txt

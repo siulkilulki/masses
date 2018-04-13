@@ -31,8 +31,7 @@ class ParishesSpider(CrawlSpider):
 
     def __init__(self, *args, **kwargs):
         super(ParishesSpider, self).__init__(*args, **kwargs)
-        self.original_url = kwargs.get('url')
-        self.start_urls = [requests.get(self.original_url).url]
+        self.start_urls = [kwargs.get('url')]
         self.allowed_domains = _get_allowed_domains(self.start_urls)
 
     def parse_start_url(self, response):
@@ -41,17 +40,18 @@ class ParishesSpider(CrawlSpider):
         previous_url = response.meta[
             'previous_url'] if 'previous_url' in response.meta else ''
 
-        if not is_binary_string(response.text.encode('utf-8')[:2048]):
+        if not is_binary_string(response.body[:2048]):
             yield {
                 "url": response.url,
                 "depth": response.meta['depth'],
                 "button_text": link_text,
                 "previous_url": previous_url,
-                "original_start_url": self.original_url,
                 "start_url": self.start_urls[0],
                 "domain": self.allowed_domains[0],
                 "content": response.text
             }
+        else:
+            self.logger.info('Content at {} is not text.'.format(response.url))
 
     def _requests_to_follow(self, response):
         if not isinstance(response, HtmlResponse):
@@ -73,7 +73,7 @@ class ParishesSpider(CrawlSpider):
     def closed(self, reason):
         if reason == 'finished':
             with open('./processed.txt', mode='a', encoding='utf-8') as f:
-                print(self.original_url, file=f)
+                print(self.start_urls[0], file=f)
         else:
             with open('./not-processed.txt', mode='a', encoding='utf-8') as f:
-                print(self.original_url, file=f)
+                print(self.start_urls[0], file=f)
