@@ -14,19 +14,19 @@ BOT_NAME = 'parishwebsites'
 SPIDER_MODULES = ['parishwebsites.spiders']
 NEWSPIDER_MODULE = 'parishwebsites.spiders'
 FEED_EXPORT_ENCODING = 'utf-8'
-LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'DEBUG'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'parishwebsites (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
-#TELNETCONSOLE_ENABLED = False
+TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
 #DEFAULT_REQUEST_HEADERS = {
@@ -65,7 +65,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 0
 # The download delay setting will honor only one of:
 DOWNLOAD_TIMEOUT = 1000
 CONCURRENT_REQUESTS_PER_DOMAIN = 4
@@ -80,21 +80,21 @@ AUTOTHROTTLE_START_DELAY = 5
 AUTOTHROTTLE_MAX_DELAY = 500
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
-AUTOTHROTTLE_TARGET_CONCURRENCY = 4
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1
 # Enable showing throttling stats for every response received:
 # AUTOTHROTTLE_DEBUG = True
 
+RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400, 404, 429, 401]
+RETRY_TIMES = 5
 # Enable and configure HTTP caching (disabled by default)
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
-#HTTPCACHE_ENABLED = True
-#HTTPCACHE_EXPIRATION_SECS = 0
-#HTTPCACHE_DIR = 'httpcache'
-#HTTPCACHE_IGNORE_HTTP_CODES = []
-#HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+HTTPCACHE_ENABLED = True
+HTTPCACHE_EXPIRATION_SECS = 1209600
+HTTPCACHE_DIR = 'httpcache'
+HTTPCACHE_IGNORE_HTTP_CODES = RETRY_HTTP_CODES
+HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.DbmCacheStorage'
 DEPTH_LIMIT = 3
 # DEPTH_PRIORITY = 1
 # SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleFifoDiskQueue'
 # SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.FifoMemoryQueue'
 
-RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400, 404, 429, 401]
-RETRY_TIMES = 7

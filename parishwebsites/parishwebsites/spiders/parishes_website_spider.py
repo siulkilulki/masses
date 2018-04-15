@@ -7,20 +7,87 @@ import requests
 from scrapy import signals
 from scrapy.http import HtmlResponse
 from binaryornot.helpers import is_binary_string
+import logging
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+import time
+
+def requests_retry_session(
+    retries=3,
+    backoff_factor=1,
+    status_forcelist=(500, 502, 503, 504, 408, 400, 404, 429, 401),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    return session
+
+
+def get_redirected_url(url):
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    t0 = time.time()
+    final_url = None
+    try:
+        final_url = requests_retry_session().get(
+            url,
+            timeout=30
+        ).url
+    except Exception as e:
+        logger.debug('Getting redirect url failed: {}'.format(e))
+    else:
+        logger.debug(f'Redirect url: {final_url}')
+    finally:
+        t1 = time.time()
+        logger.debug('Getting redirect url took: {} seconds'.format(t1 - t0))
+        return final_url
 
 def _get_allowed_domains(urls):
-    domains = []
-    for url in urls:
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    def extract_domain(url):
         ext = tldextract.extract(url)
         domain = '.'.join(ext).lstrip('.').rstrip('.')
         domain = re.sub('www.', '', domain)
-        domains.append(domain)
+        return domain
+    domains = set() 
+    for url in urls:
+        domain = extract_domain(url)
+        domains.add(domain)
+        redirected_domain = extract_domain(get_redirected_url(url))
+        if redirected_domain:
+            domains.add(redirected_domain)
+    domains = list(domains)
+    logger.debug('Allowed domains: {}'.format(domains))
     return domains
 
 def get_deny_domains():
     with open('domain-blacklist.txt') as f:
         blacklisted_domains = [line.rstrip('\n') for line in f]
     return blacklisted_domains
+
+def configure_loggers():
+    logger = logging.getLogger('chardet.charsetprober')
+    logger.setLevel(logging.INFO)
+
+    logger = logging.getLogger('scrapy.core.scraper')
+    logger.setLevel(logging.INFO)
+
+    logger = logging.getLogger('binaryornot.helpers')
+    logger.setLevel(logging.INFO)
+
+    logger = logging.getLogger('scrapy.spidermiddlewares.depth')
+    logger.setLevel(logging.INFO)
+
 
 class ParishesSpider(CrawlSpider):
     name = "parishes"
@@ -30,8 +97,10 @@ class ParishesSpider(CrawlSpider):
         follow=True), )
 
     def __init__(self, *args, **kwargs):
+        configure_loggers()
         super(ParishesSpider, self).__init__(*args, **kwargs)
         self.start_urls = [kwargs.get('url')]
+        self.filename = kwargs.get('filename')
         self.allowed_domains = _get_allowed_domains(self.start_urls)
 
     def parse_start_url(self, response):
@@ -71,9 +140,10 @@ class ParishesSpider(CrawlSpider):
                 yield rule.process_request(r)
 
     def closed(self, reason):
+        fileinfo = '{}\t{}'.format(self.start_urls[0], self.filename)
         if reason == 'finished':
             with open('./processed.txt', mode='a', encoding='utf-8') as f:
-                print(self.start_urls[0], file=f)
+                print(fileinfo, file=f)
         else:
             with open('./not-processed.txt', mode='a', encoding='utf-8') as f:
-                print(self.start_urls[0], file=f)
+                print(fileinfo, file=f)

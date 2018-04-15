@@ -1,15 +1,15 @@
 SHELL := /bin/bash
 PREPARE_ENVIRONMENT := $(shell ./prepare-environment.sh > /tmp/makeenv)
 include /tmp/makeenv
-JOBS := 40
+JOBS := 100
 
-.PHONY: all update data clean clean-data
+.PHONY: all update data clean clean-data clean-cache
 
 all: data
 
 data: parishwebsites/spider-commands.txt parishwebsites/domain-blacklist.txt
 	rm -f parishwebsites/*processed.txt
-	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands.txt 2> crawler-log.txt
+	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands.txt
 
 parishwebsites/spider-commands.txt: parishes-with-urls.tsv parishwebsites/domain-blacklist.txt
 	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u | parishwebsites/remove_blacklisted.py $(word 2,$^) > $@
@@ -28,3 +28,6 @@ clean:
 
 clean-data:
 	rm -rf parishwebsites/{data,processed.txt,crawler-log.txt}
+
+clean-cache:
+	rm -rf parishwebsites/.scrapy/httpcache

@@ -18,11 +18,13 @@ def main():
     text_maker.ignore_images = True
     writer = jsonlines.Writer(sys.stdout)
     # text_maker.wrap_links = False
-    # text_maker.strong_mark = ''
+    text_maker.strong_mark = ''
     with jsonlines.open(sys.argv[1]) as reader:
         for parish in reader:
             parish = convert_html_to_text(parish, text_maker)
+            parish_content = parish.pop('content')
             pprint.pprint(parish)
+            print(parish_content)
 
 if __name__ == '__main__':
     main()
