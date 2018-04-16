@@ -17,7 +17,7 @@ FEED_EXPORT_ENCODING = 'utf-8'
 LOG_LEVEL = 'DEBUG'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'parishwebsites (+http://www.yourdomain.com)'
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -85,7 +85,7 @@ AUTOTHROTTLE_TARGET_CONCURRENCY = 1
 # AUTOTHROTTLE_DEBUG = True
 
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 400, 404, 429, 401]
-RETRY_TIMES = 5
+RETRY_TIMES = 3
 # Enable and configure HTTP caching (disabled by default)
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
 HTTPCACHE_ENABLED = True
@@ -93,6 +93,7 @@ HTTPCACHE_EXPIRATION_SECS = 1209600
 HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = RETRY_HTTP_CODES
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.DbmCacheStorage'
+# HTTPCACHE_GZIP = 'True'
 DEPTH_LIMIT = 3
 # DEPTH_PRIORITY = 1
 # SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleFifoDiskQueue'

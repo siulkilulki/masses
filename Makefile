@@ -7,12 +7,17 @@ JOBS := 100
 
 all: data
 
+
+data-add: parishwebsites/spider-commands-add.txt parishwebsites/domain-blacklist.txt parishwebsites/deal-with-not-completed.sh
+	cd parishwebsites && ./deal-with-not-completed.sh
+	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands-add.txt
+
 data: parishwebsites/spider-commands.txt parishwebsites/domain-blacklist.txt
 	rm -f parishwebsites/*processed.txt
 	cd parishwebsites && parallel --jobs $(JOBS) < spider-commands.txt
 
 parishwebsites/spider-commands.txt: parishes-with-urls.tsv parishwebsites/domain-blacklist.txt
-	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u | parishwebsites/remove_blacklisted.py $(word 2,$^) > $@
+	cut -f3 $< | tail -n +2 | grep http | parishwebsites/generate_spider_commands.sh | sort -u | parishwebsites/remove_blacklisted.py $(word 2,$^) | parishwebsites/remove_duplicate_commands.py > $@
 
 parishes-with-urls.tsv: apikey.txt parishes-deon.tsv scraper/get_parishes_urls.py
 	scraper/get_parishes_urls.py -a $< -p $(word 2,$^) >> $@ 2> get-parishes-urls.log
