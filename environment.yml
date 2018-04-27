@@ -5,6 +5,8 @@ channels:
 dependencies:
   - python
   - scrapy
+  - gunicorn
+  - flask
   - pip:
     - lxml
     - tldextract
