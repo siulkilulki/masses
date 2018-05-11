@@ -14,7 +14,7 @@
     <div class="container">
         <div class="container mt-1">
             <div class="row justify-content-start">
-                <button type="button" class="btn btn-warning btn-sm" id="cofnij">Cofinj</button>
+                <button type="button" class="btn btn-warning btn-sm" id="undo">Cofnij</button>
             </div>
             <div class="row justify-content-center">
                 <h2>Czy zaznaczono godzinę mszy świętej?</h2>
@@ -26,8 +26,8 @@
             </div>
         </div>
         <div class="btn-group d-flex h-mx" role="group">
-            <button type="button" class="btn btn-danger btn-lg w-100" id="nie">Nie</button>
-            <button type="button" class="btn btn-success btn-lg w-100" id="tak">Tak</button>
+            <button type="button" class="btn btn-danger btn-lg w-100" id="no">Nie</button>
+            <button type="button" class="btn btn-success btn-lg w-100" id="yes">Tak</button>
         </div>
     </div>
     <!-- Optional JavaScript -->
@@ -36,9 +36,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script type="text/javascript">
-     $("button#tak").click(function(){
+     $("button#yes").click(function(){
          $.post( "/", {result: "yes"}, function() {
-             console.log( "success" );
+             console.log( "yes button clicked" );
+         })
+          .done(function() {
+              console.log( "second success" );
+          })
+          .fail(function() {
+              console.log( "error" );
+          })
+          .always(function() {
+              console.log( "finished" );
+          });
+     });
+     $("button#no").click(function(){
+         $.post( "/", {result: "no"}, function() {
+             console.log( "no button clicked" );
+         })
+          .done(function() {
+              console.log( "second success" );
+          })
+          .fail(function() {
+              console.log( "error" );
+          })
+          .always(function() {
+              console.log( "finished" );
+          });
+     });
+     $("button#undo").click(function(){
+         $.post( "/", {result: "undo"}, function() {
+             console.log( "undo button clicked" );
          })
           .done(function() {
               console.log( "second success" );

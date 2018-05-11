@@ -1,20 +1,20 @@
 name: polish-masses
 channels:
   - defaults
-  - conda-forge
 dependencies:
   - python
   - scrapy
   - gunicorn
   - flask
+  - redis-py
+  - lxml
+  - requests
+  - beautifulsoup4
+  - colorama
   - pip:
-    - lxml
     - tldextract
-    - requests
-    - beautifulsoup4
     - python-google-places
     - jsonlines
     - ipdb
-    - colorama
     - html2text
     - binaryornot

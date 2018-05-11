@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+from utils import iterator
 from colorama import Fore, Back, Style
 import os
 import jsonlines
 import re
 import pprint
+import sys
 
 
 class Extractor:
@@ -38,6 +40,8 @@ class Extractor:
         return '(?P<{}>{})'.format(name, pattern)
 
     def extract(self, search_space=None):
+        if search_space == '':
+            return None
         if not search_space:
             search_space = self.content
         header_match = re.search(self.header, search_space, re.I)
@@ -51,8 +55,13 @@ class Extractor:
         if re.search(self.header, search_space[:sunday_title_match.start()],
                      re.I):  # found header closer to sunday title
             return self.extract(search_space)
-        if sunday_title_match.start() > 50:
-            return self.extract(search_space[sunday_title_match.end()])
+        if sunday_title_match.start(
+        ) > 50:  #sunday_title za daleko header'a wiec szukaj dalej
+            try:
+                return self.extract(search_space[sunday_title_match.end():])
+            except Exception:
+                import ipdb
+                ipdb.set_trace()
 
         everyday_title_match = re.search(self.everyday_title, search_space,
                                          re.I)
@@ -87,8 +96,9 @@ class Extractor:
         # w dni powszednie (czas wakacji) - górny kościół
         # 7:00, 8:00, 18:00
 
-        print('url: {}\ndepth: {}\nbutton: {}'.format(self.page[
-            'url'], self.page['depth'], self.page['button_text']))
+        print('url: {}\ndepth: {}\nbutton: {}'.format(
+            self.page['url'], self.page['depth'], self.page['button_text']))
+        sys.stdout.flush()
         return whole_result, groups
 
 
@@ -96,16 +106,15 @@ def process_directory(directory):
     found = 0
     not_found = 0
     for root, dirs, files in os.walk(directory):
-        for fname in files:
+        for fname in sorted(files):
             filepath = os.path.join(root, fname)
             if os.path.getsize(filepath) > 0:
-                with jsonlines.open(filepath) as reader:
-                    # print(filepath)
-                    if process_parish(reader):
-                        found += 1
-                    else:
-                        not_found += 1
-                    # print('found: {}\nnot_found: {}'.format(found, not_found))
+                if process_parish(iterator.parish_page_iterator(filepath)):
+                    print(filepath)
+                    found += 1
+                else:
+                    not_found += 1
+                print('found: {}\nnot_found: {}'.format(found, not_found))
             else:
                 pass  # empty file
 
@@ -125,6 +134,7 @@ def process_parish(reader):
         if result:
             whole_result, groups = result
             if whole_result not in page['content']:
+                pass
                 import ipdb
                 ipdb.set_trace()
             pretty_text = page['content'].replace(
@@ -132,19 +142,18 @@ def process_parish(reader):
                 color_match(whole_result, groups, Back.BLACK, [
                     Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.MAGENTA, Fore.CYAN
                 ], Style.BRIGHT))
-            print(pretty_text)
-            import ipdb
-            ipdb.set_trace()
-            return True
-        else:
-            return False
+            # print(pretty_text)
+            # print(page['depth'])
+            # print(page['url'])
+            # print(page['button_text'])
             # import ipdb
             # ipdb.set_trace()
-            pass
+            return True
+    return False
 
 
 def main():
-    process_directory('./parishwebsites/data-final')
+    process_directory('./parishwebsites/data')
 
 
 if __name__ == '__main__':
