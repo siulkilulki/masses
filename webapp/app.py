@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, make_response
 import redis
 app = Flask(__name__)
 
@@ -18,11 +18,13 @@ def get_action():
     hour = '12.00'
     left_context = 'Dawno, dawno temu był sobia para młoda, bardzo piękna para młoda. Msza rozpocznie się o godzinie '
     right_context = '. Następnie para młoda uda się na wesele do Kubusia i będą się bawić do białegop prana.'
-    return render_template(
-        'index.html',
-        hour=hour,
-        left_context=left_context,
-        right_context=right_context)
+    resp = make_response(
+        render_template(
+            'index.html',
+            hour=hour,
+            left_context=left_context,
+            right_context=right_context))
+    return resp
 
 
 @app.route("/", methods=['GET', 'POST'])

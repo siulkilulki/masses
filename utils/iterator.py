@@ -12,13 +12,14 @@ def parish_path_iterator(directory):
                 yield filepath
 
 
-def parish_page_iterator(filepath):
+def parish_page_iterator(filepath, html=True):
     with jsonlines.open(filepath) as parish_reader:
-        page_nr = 0
         for parish_page in parish_reader:
-            page_nr += 1
             if 'Maximum execution time of 30 seconds exceeded in' in parish_page[
                     'content']:
                 continue
-            parish2text = Parish2Text()
-            yield parish2text.convert(parish_page)
+            if html:
+                parish2text = Parish2Text()
+                yield parish2text.convert(parish_page)
+            else:
+                yield parish_page

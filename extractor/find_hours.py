@@ -1,16 +1,17 @@
 import re
 from colorama import Fore, Back, Style
 
-hour_regex = re.compile('\d\d?[:.]?(oo|\d\d)|\d\d|6|7|8|9')
+hour_regex = re.compile(
+    '(0[6-9]|1\d|2[0-2])[:.](oo|[0-5]\d)|6|7|8|9|1\d|2[0-2]')
 
 
 def borders_ok(text, start, end):
     text = ' ' + text + ' '
     before_start_char = text[start]
     after_end_char = text[end + 1]
-    if (before_start_char.isspace()
-            or before_start_char == ',') and (after_end_char.isspace()
-                                              or after_end_char in ',;'):
+    if ((before_start_char.isspace() or before_start_char in ',(/')
+            and (after_end_char.isspace() or after_end_char in ',;)/')
+            and (before_start_char != '(' or after_end_char != ')')):
         return True
     else:
         return False

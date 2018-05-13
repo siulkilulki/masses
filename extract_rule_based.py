@@ -88,6 +88,7 @@ class Extractor:
         groups = (header_match.group(0), sunday_title_match.group(0),
                   sunday_masses_hours, everyday_title_match.group(0),
                   everyday_masses_match.group(0))
+        print(sunday_masses_hours + '\n' + everyday_masses_match.group(0))
         # print(whole_result)
         # print(groups)
         # obsłużyć # TODO:
@@ -109,10 +110,12 @@ def process_directory(directory):
         for fname in sorted(files):
             filepath = os.path.join(root, fname)
             if os.path.getsize(filepath) > 0:
-                if process_parish(iterator.parish_page_iterator(filepath)):
-                    print(filepath)
+                if process_parish(
+                        iterator.parish_page_iterator(filepath, html=False)):
+                    print('found: {}'.format(filepath))
                     found += 1
                 else:
+                    print('missed: {}'.format(filepath))
                     not_found += 1
                 print('found: {}\nnot_found: {}'.format(found, not_found))
             else:
@@ -146,14 +149,12 @@ def process_parish(reader):
             # print(page['depth'])
             # print(page['url'])
             # print(page['button_text'])
-            # import ipdb
-            # ipdb.set_trace()
             return True
     return False
 
 
 def main():
-    process_directory('./parishwebsites/data')
+    process_directory('./parishwebsites/text-data')
 
 
 if __name__ == '__main__':

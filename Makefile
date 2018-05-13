@@ -7,6 +7,9 @@ JOBS := 100
 
 all: data
 
+parish2text: parishwebsites/parish2text.py parishwebsites/parish2text-commands.sh
+	mkdir -p parishwebsites/{text-data,text-data-logs}
+	cd parishwebsites && ./parish2text-commands.sh data > p2t-commands.txt && parallel --jobs -2 < p2t-commands.txt
 
 data-add: parishwebsites/spider-commands-add.txt parishwebsites/domain-blacklist.txt parishwebsites/deal-with-not-completed.sh
 	cd parishwebsites && ./deal-with-not-completed.sh
