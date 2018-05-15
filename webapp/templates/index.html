@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="pl">
-  <head>
+
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
@@ -9,10 +10,11 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
 
     <title>Annotator mszy świętych</title>
-  </head>
-  <body>
+</head>
+
+<body>
     <div class="container">
-        <div class="container mt-1">
+        <div class="container mt-2">
             <div class="row justify-content-start">
                 <button type="button" class="btn btn-warning btn-sm" id="undo">Cofnij</button>
             </div>
@@ -20,12 +22,11 @@
                 <h2>Czy zaznaczono godzinę mszy świętej?</h2>
             </div>
             <div class="row justify-content-center">
-                <div class="jumbotron my-auto">
-                    <p class="lead">{{ left_context }}<strong class="bg-warning h4">{{ hour }}</strong>{{right_context}}</p>
+                <div class="jumbotron my-auto w-100" id="content">
                 </div>
             </div>
         </div>
-        <div class="btn-group d-flex h-mx" role="group">
+        <div class="btn-group d-flex mb-1" role="group">
             <button type="button" class="btn btn-danger btn-lg w-100" id="no">Nie</button>
             <button type="button" class="btn btn-success btn-lg w-100" id="yes">Tak</button>
         </div>
@@ -35,49 +36,102 @@
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='hash.min.js') }}"></script>
     <script type="text/javascript">
-     $("button#yes").click(function(){
-         $.post( "/", {result: "yes"}, function() {
-             console.log( "yes button clicked" );
-         })
-          .done(function() {
-              console.log( "second success" );
-          })
-          .fail(function() {
-              console.log( "error" );
-          })
-          .always(function() {
-              console.log( "finished" );
-          });
-     });
-     $("button#no").click(function(){
-         $.post( "/", {result: "no"}, function() {
-             console.log( "no button clicked" );
-         })
-          .done(function() {
-              console.log( "second success" );
-          })
-          .fail(function() {
-              console.log( "error" );
-          })
-          .always(function() {
-              console.log( "finished" );
-          });
-     });
-     $("button#undo").click(function(){
-         $.post( "/", {result: "undo"}, function() {
-             console.log( "undo button clicked" );
-         })
-          .done(function() {
-              console.log( "second success" );
-          })
-          .fail(function() {
-              console.log( "error" );
-          })
-          .always(function() {
-              console.log( "finished" );
-          });
-     });
+        /* console.log('index = ' + {{index}}) */
+        function update_content(dict) {
+            document.getElementById("content").innerHTML = `<p class="lead">${dict.left_context}<strong class="bg-warning h4">${dict.hour}</strong>${dict.right_context}</p>`
+        }
+
+        function tell_to_refresh() {
+            document.getElementById("content").innerHTML = '<p class="lead">Please reload page.</p>'
+        }
+        var index;
+        new Fingerprint2().get(function(result, components) {
+            console.log(result)
+            $.post("/", {
+                    action: "get",
+                    hash: result,
+                }, function() {
+                    console.log("first get");
+                })
+                .done(function(reply) {
+                    index = reply.index;
+                    update_content(reply);
+                    console.log("content set");
+                })
+                .fail(function() {
+                    console.log("error");
+                    tell_to_refresh()
+                })
+                .always(function() {
+                    console.log("finished");
+                });
+            $("button#yes").click(function() {
+                $.post("/", {
+                        action: "yes",
+                        index: index,
+                        hash: result
+                    }, function() {
+                        console.log("yes button clicked");
+                    })
+                    .done(function(reply) {
+                        index = reply.index;
+                        update_content(reply);
+                        window.scrollTo(0, document.body.scrollHeight);
+                    })
+                    .fail(function() {
+                        console.log("error");
+                        tell_to_refresh()
+                    })
+                    .always(function() {
+                        console.log("finished");
+                    });
+            });
+            $("button#no").click(function() {
+                $.post("/", {
+                        action: "no",
+                        index: index,
+                        hash: result
+                    }, function() {
+                        console.log("no button clicked");
+                    })
+                    .done(function(reply) {
+                        index = reply.index;
+                        update_content(reply);
+                        window.scrollTo(0, document.body.scrollHeight);
+                    })
+                    .fail(function() {
+                        console.log("error");
+                        tell_to_refresh()
+                    })
+                    .always(function() {
+                        console.log("finished");
+                    });
+            });
+            $("button#undo").click(function() {
+                $.post("/", {
+                        action: "undo",
+                        index: index,
+                        hash: result
+                    }, function() {
+                        console.log("undo button clicked");
+                    })
+                    .done(function(reply) {
+                        index = reply.index;
+                        update_content(reply);
+                        console.log("second success");
+                    })
+                    .fail(function() {
+                        console.log("error");
+                        tell_to_refresh()
+                    })
+                    .always(function() {
+                        console.log("finished");
+                    });
+            });
+        })
     </script>
-  </body>
+</body>
+
 </html>

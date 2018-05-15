@@ -17,11 +17,19 @@ def borders_ok(text, start, end):
         return False
 
 
+def delete_duplicates(text):
+    text = re.sub(' +', ' ', text)
+    text = re.sub(' ?\n ?', '\n', text)
+    text = re.sub('\n{5,}', '\n\n\n', text)
+    text = re.sub('\n\n', '\n', text)
+    return text
+
+
 def get_context(text, start, end, minsize):
     hour = text[start:end]
-    prefix = re.sub(' +', ' ', text[:start]).rsplit(
-        ' ', maxsplit=minsize + 2)[1:]
-    suffix = re.sub(' +', ' ', text[end:]).split(
+    prefix = delete_duplicates(text[:start]).rsplit(
+        ' ', maxsplit=minsize + 12)[1:]
+    suffix = delete_duplicates(text[end:]).split(
         ' ', maxsplit=minsize + 2)[:-1]
     return ' '.join(prefix), hour, ' '.join(suffix)
 
@@ -33,12 +41,12 @@ def hours_iterator(text, minsize=20, color=False):
         if not borders_ok(text, start, end):
             continue
         prefix, hour, suffix = get_context(text, start, end, minsize)
-        utterance = f'{prefix}&&&{hour}###{suffix}'
         if color:
+            utterance = f'{prefix}&&&{hour}###{suffix}'
             yield utterance, color_hour(prefix, hour, suffix, Fore.GREEN,
                                         Style.BRIGHT)
         else:
-            yield utterance
+            yield prefix, hour, suffix
 
 
 # w klasyfikatorze dzielić tak aby jeszcze \n było oddzielnie

@@ -8,7 +8,6 @@ import re
 import pickle
 
 
-# r = redis.StrictRedis(host='localhost', port=6379, db=0)
 class Utterance():
     def __init__(self, utterance, url, button_text, depth, filename, line_no):
         "docstring"
@@ -23,11 +22,26 @@ class Utterance():
 def add_utterances(parish_page, parish_path, utterances):
     utterances_nr = 0
     content = parish_page['content']
-    for utterances_nr, utterance in enumerate(hours_iterator(content)):
-        utterance_inst = Utterance(
-            utterance, parish_page['url'], parish_page['button_text'],
-            parish_page['depth'], parish_path, parish_page['line_no'])
-        utterances.append(utterance_inst)
+    for utterances_nr, (prefix, hour, suffix) in enumerate(
+            hours_iterator(content)):
+        # utterance_inst = Utterance(
+        #     utterance, parish_page['url'], parish_page['button_text'],
+        #     parish_page['depth'], parish_path, parish_page['line_no'])
+        utterance_dict = {
+            'prefix': prefix,
+            'hour': hour,
+            'suffix': suffix,
+            'url': parish_page['url'],
+            'button_text': parish_page['button_text'],
+            'depth': parish_page['depth'],
+            'filepath': parish_path,
+            'line_no': parish_page['line_no']
+        }
+        # print(prefix)
+        # print(hour)
+        # print('-------------------------------------------------')
+        # print(suffix)
+        utterances.append(utterance_dict)
     return utterances_nr
 
 
@@ -96,9 +110,11 @@ def remove_duplicates(utterances):
     seen = set()
     res = []
     for utt in utterances:
-        if utt.utterance not in seen:
+        # TODO: check why with &&&hour### it gives more utterances!!!
+        utterance_text = utt['prefix'] + utt['hour'] + utt['suffix']
+        if utterance_text not in seen:
             res.append(utt)
-            seen.add(utt.utterance)
+            seen.add(utterance_text)
     return res
 
 
@@ -148,6 +164,7 @@ def get_extracted_by_rules(filename):
 
 
 def main():
+    # TODO: use argparse and add makefile goal
     extracted_by_rules = get_extracted_by_rules('./extracted-by-rules.txt')
     utterances = load_parishes('./parishwebsites/text-data',
                                extracted_by_rules)
