@@ -2,7 +2,7 @@ import re
 from colorama import Fore, Back, Style
 
 hour_regex = re.compile(
-    '(0[6-9]|1\d|2[0-2])[:.](oo|[0-5]\d)|6|7|8|9|1\d|2[0-2]')
+    '(0?[6-9]|1\d|2[0-2])[:.](oo|[0-5]\d)|6|7|8|9|1\d|2[0-2]')
 
 
 def borders_ok(text, start, end):

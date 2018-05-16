@@ -25,6 +25,7 @@ utterances = load_utterances(
     '/home/siulkilulki/gitrepos/mass-scraper/utterances.pkl')
 
 UTT_SCORES = 'utterance-scores'
+COOKIE_NAME = 'cookie-hash'
 # log(utterances[0:2])
 
 #initialize_redis_db
@@ -38,7 +39,9 @@ else:
 if status != 'filled':
     log('filling status')
     for i in range(len(utterances)):
-        r.zadd(UTT_SCORES, 0, str(i))
+        if r.zscore(UTT_SCORES, str(i)) == None:
+            log(i)
+            r.zadd(UTT_SCORES, 0, str(i))
     r.set('status', 'filled')
     status = 'filled'
 
@@ -62,7 +65,7 @@ def get_next_response(cookie_hash):
         hour=hour,
         right_context=right_context)
     if cookie_hash:
-        resp.set_cookie('cookie-hash', cookie_hash, max_age=60 * 60 * 24 * 90)
+        resp.set_cookie(COOKIE_NAME, cookie_hash, max_age=60 * 60 * 24 * 90)
     return resp
 
 
@@ -84,19 +87,18 @@ def get_response_by_index(index, cookie_hash):
         hour=hour,
         right_context=right_context)
     if cookie_hash:
-        resp.set_cookie('cookie-hash', cookie_hash, max_age=60 * 60 * 24 * 90)
+        resp.set_cookie(COOKIE_NAME, cookie_hash, max_age=60 * 60 * 24 * 90)
     return resp
 
 
 def annotate_redis(yesno, index):
-    cookie_hash = request.cookies.get('cookie-hash')
+    cookie_hash = request.cookies.get(COOKIE_NAME)
+    log('annotate: {}'.format(cookie_hash))
     if not cookie_hash:
         return None
     annotation = r.get('{}:{}'.format(
         cookie_hash, index))  # previous annotation of utterance by that user
     if annotation:
-        log('!!!!!!!!!!!')
-        log(annotation)
         str_index = int(annotation.decode('utf-8').split(':')[1])
         log(str_index)
         r.setrange(index, str_index, yesno)  #sets str_index to yesno value
@@ -114,30 +116,31 @@ def annotate_redis(yesno, index):
 def set_cookie(js_hash):
     # dodawać nowe js_hash do listy z key bedacym cookie_hash
     old_cookie_hash = None
-    cookie_hash = request.cookies.get('cookie-hash')
+    cookie_hash = request.cookies.get(COOKIE_NAME)
+    log(js_hash)
+    log('set cookie: {}'.format(cookie_hash))
     if not cookie_hash:
         old_cookie_hash = r.get(js_hash)
         if not old_cookie_hash:
             cookie_hash = str(
                 int.from_bytes(os.urandom(4), byteorder='little'))
-            r.set(js_hash, cookie_hash, nx=True)
+            r.set(js_hash, cookie_hash)
         else:
-            cookie_hash = str(old_cookie_hash)
+            cookie_hash = old_cookie_hash.decode('utf-8')
     log('old_cookie: {}, cookie: {}'.format(old_cookie_hash, cookie_hash))
     return cookie_hash
 
 
-def http_post(request):
+def http_post():
     index = str(request.form.get('index'))
     action = request.form['action']
     js_hash = request.form['hash']
     log(request.form)
-    log(f'action: {action}')
     if action == 'get':
         cookie_hash = set_cookie(js_hash)
         return get_next_response(cookie_hash)
     elif action == 'undo':
-        cookie_hash = request.cookies.get('cookie-hash')
+        cookie_hash = request.cookies.get(COOKIE_NAME)
         if cookie_hash:
             last_action = r.lpop(cookie_hash)
             if last_action:
@@ -161,7 +164,7 @@ def http_get():
 @app.route("/", methods=['GET', 'POST'])
 def root():
     if request.method == 'POST':
-        return http_post(request)
+        return http_post()
     else:
         return http_get()
 

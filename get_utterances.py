@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 import urllib
 import logging
 import redis
@@ -169,7 +170,7 @@ def main():
     utterances = load_parishes('./parishwebsites/text-data',
                                extracted_by_rules)
     print(len(utterances))
-    with open('utterances.pkl', 'wb') as f:
+    with open(sys.argv[1], 'wb') as f:
         pickle.dump(utterances, f, pickle.HIGHEST_PROTOCOL)
     # r.set('foo', 'bar')
     # print(r.get('foo'))
