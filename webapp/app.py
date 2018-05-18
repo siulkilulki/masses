@@ -1,18 +1,20 @@
 from flask import Flask, render_template, request, make_response, jsonify
+import time
 import os
 from get_utterances import Utterance
 import redis
 import pickle
 import re
+import logging
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 
 def log(msg):
-    with open('/tmp/tmp', 'w') as f:
-        print(msg, f, flush=True)
+    app.logger.info(msg)
 
 
 def load_utterances(filename):
@@ -52,8 +54,8 @@ def get_next():
     hour = utterances[index]['hour'].replace('\n', '<br>')
     right_context = ' '.join(
         utterances[index]['suffix'].split(' ')[:10]).replace('\n', '<br>')
-    # log('get_next index: {}, score: {}'.format(index,
-    #                                            r.zscore(UTT_SCORES, index)))
+    log('get_next index: {}, score: {}'.format(index,
+                                               r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
 
 
@@ -91,16 +93,15 @@ def get_response_by_index(index, cookie_hash):
     return resp
 
 
-def annotate_redis(yesno, index):
+def annotate_redis(yesno, index, ip_addr):
     cookie_hash = request.cookies.get(COOKIE_NAME)
-    log('annotate: {}'.format(cookie_hash))
+    # log('annotate: {}'.format(cookie_hash))
     if not cookie_hash:
         return None
     annotation = r.get('{}:{}'.format(
         cookie_hash, index))  # previous annotation of utterance by that user
     if annotation:
         str_index = int(annotation.decode('utf-8').split(':')[1])
-        log(str_index)
         r.setrange(index, str_index, yesno)  #sets str_index to yesno value
     else:
         # before = r.zscore(UTT_SCORES, index)
@@ -108,26 +109,31 @@ def annotate_redis(yesno, index):
         # log('incrementing index {}, before_val: {}, value: {}'.format(
         #     index, before, r.zscore(UTT_SCORES, index)))
         str_index = r.append(index, yesno) - 1
-    r.set('{}:{}'.format(cookie_hash, index), '{}:{}'.format(yesno, str_index))
+    timestamp = time.time()
+    r.set('{}:{}'.format(cookie_hash, index), '{}:{}:{}'.format(
+        yesno, str_index, timestamp))
+    r.set('{}:{}'.format(ip_addr, index), '{}:{}:{}:{}'.format(
+        yesno, str_index, timestamp, cookie_hash))
     r.lpush(cookie_hash, '{}:{}:{}'.format(yesno, index, str_index))
     return cookie_hash
 
 
 def set_cookie(js_hash):
-    # dodawać nowe js_hash do listy z key bedacym cookie_hash
+    ## TODO:  dodawać nowe js_hash do listy z key bedacym cookie_hash | czy trzeba?
     old_cookie_hash = None
     cookie_hash = request.cookies.get(COOKIE_NAME)
-    log(js_hash)
-    log('set cookie: {}'.format(cookie_hash))
     if not cookie_hash:
         old_cookie_hash = r.get(js_hash)
         if not old_cookie_hash:
             cookie_hash = str(
                 int.from_bytes(os.urandom(4), byteorder='little'))
             r.set(js_hash, cookie_hash)
+            log('Cookie not on client side. Creating new cookie.')
         else:
+            log('Cookie not on client side. Getting cookie from fingerprint.')
             cookie_hash = old_cookie_hash.decode('utf-8')
-    log('old_cookie: {}, cookie: {}'.format(old_cookie_hash, cookie_hash))
+    else:
+        log('cookie found on client side')
     return cookie_hash
 
 
@@ -135,26 +141,31 @@ def http_post():
     index = str(request.form.get('index'))
     action = request.form['action']
     js_hash = request.form['hash']
-    log(request.form)
+    ip_addr = str(request.headers.get('X-Real-Ip', request.remote_addr))
     if action == 'get':
         cookie_hash = set_cookie(js_hash)
-        return get_next_response(cookie_hash)
+        resp = get_next_response(cookie_hash)
     elif action == 'undo':
         cookie_hash = request.cookies.get(COOKIE_NAME)
         if cookie_hash:
             last_action = r.lpop(cookie_hash)
             if last_action:
                 index = int(last_action.decode('utf-8').split(':')[1])
-                return get_response_by_index(index, cookie_hash)
-        # if no cookie-hash or action list is empty return None
+                resp = get_response_by_index(index, cookie_hash)
+        # if no cookie-hash or action list is empty resp = None
     elif action == 'yes':
-        cookie_hash = annotate_redis('y', index)
+        cookie_hash = annotate_redis('y', index, ip_addr)
         if cookie_hash:
-            return get_next_response(cookie_hash)
+            resp = get_next_response(cookie_hash)
     elif action == 'no':
-        cookie_hash = annotate_redis('n', index)
+        cookie_hash = annotate_redis('n', index, ip_addr)
         if cookie_hash:
-            return get_next_response(cookie_hash)
+            resp = get_next_response(cookie_hash)
+    if resp:
+        # r.sadd
+        log(f'ip: {ip_addr}, cookie: {cookie_hash}, hash: {js_hash}, action: {action}, index: {index}'
+            )
+        return resp
 
 
 def http_get():
@@ -170,4 +181,7 @@ def root():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    # app.logger.setLevel(gunicorn_logger.level)
+    app.run(host='0.0.0.0', debug=False)
