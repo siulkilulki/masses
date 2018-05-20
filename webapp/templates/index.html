@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="pl">
-
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -11,7 +10,32 @@
 
     <title>Annotator mszy świętych</title>
 </head>
-
+<!-- Begin Cookie Consent script https://cookiescript.info/ -->
+<link rel="stylesheet" type="text/css" href="//cookiescriptcdn.pro/libs/cookieconsent.7.min.css" />
+<a id="cookieconsent:learn_more" aria-label="learn more about cookies" role=button tabindex="0" class="cc-link" href="https://cookie-policy.org/" target="_blank">Więcej informacji</a><script>var cookieconsent_ts = 1526746886226; var learnmore2 = document.getElementById("cookieconsent:learn_more");learnmore2.setAttribute("style", "display:none");</script>
+<script src="//cookiescriptcdn.pro/libs/cookieconsent.7.min.js"></script>
+<script>
+window.addEventListener("load", function(){
+window.cookieconsent.initialise({
+  "palette": {
+    "popup": {
+      "background": "#000"
+    },
+    "button": {
+      "background": "#f1d600"
+    }
+  },
+  "theme": "classic",
+  "content": {
+    "message": "Ta strona używa ciasteczek.",
+    "dismiss": "Ok",
+    "link": "Więcej informacji",
+    "href": "http://wszystkoociasteczkach.pl/po-co-sa-ciasteczka/"
+  }
+})});
+</script>
+<noscript><a href="https://cookiescript.info/">Cookie consent script</a></noscript>
+<!-- End Cookie Consent script -->
 <body>
     <div class="container">
         <div class="container mt-2">
@@ -46,6 +70,19 @@
         function tell_to_refresh() {
             document.getElementById("content").innerHTML = '<p class="lead">Please reload page.</p>'
         }
+
+        function tell_to_wait(wait_time) {
+            document.body.innerHTML = `<div class="alert alert-danger" role="alert"> Zaobserowano niebezpieczne akcje z twojego adresu ip. Poczekaj <strong> ${wait_time} </strong> aby znów móc korzystać z serwisu. </div> `
+        }
+
+        function handle_reply(reply) {
+            if (reply.wait_time_str) {
+                tell_to_wait(reply.wait_time_str)
+            } else {
+                index = reply.index;
+                update_content(reply);
+            }
+        }
         var index;
         new Fingerprint2().get(function(result, components) {
             console.log(result)
@@ -56,8 +93,7 @@
                     console.log("first get");
                 })
                 .done(function(reply) {
-                    index = reply.index;
-                    update_content(reply);
+                    handle_reply(reply)
                     console.log("content set");
                 })
                 .fail(function() {
@@ -76,8 +112,7 @@
                         console.log("yes button clicked");
                     })
                     .done(function(reply) {
-                        index = reply.index;
-                        update_content(reply);
+                        handle_reply(reply)
                         window.scrollTo(0, document.body.scrollHeight);
                     })
                     .fail(function() {
@@ -97,8 +132,7 @@
                         console.log("no button clicked");
                     })
                     .done(function(reply) {
-                        index = reply.index;
-                        update_content(reply);
+                        handle_reply(reply)
                         window.scrollTo(0, document.body.scrollHeight);
                     })
                     .fail(function() {
@@ -118,9 +152,7 @@
                         console.log("undo button clicked");
                     })
                     .done(function(reply) {
-                        index = reply.index;
-                        update_content(reply);
-                        console.log("second success");
+                        handle_reply(reply)
                     })
                     .fail(function() {
                         console.log("error");

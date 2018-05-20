@@ -7,10 +7,14 @@ import pickle
 import re
 import logging
 
+UTT_SCORES = 'utterance-scores'
+COOKIE_NAME = 'cookie-hash'
+MAX_COOKIES_PER_IP = 5
+
 app = Flask(__name__)
 app.logger.setLevel(logging.INFO)
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+r = redis.StrictRedis(unix_socket_path='/redis-socket/redis.sock', db=0)
 
 
 def log(msg):
@@ -26,13 +30,7 @@ def load_utterances(filename):
 utterances = load_utterances(
     '/home/siulkilulki/gitrepos/mass-scraper/utterances.pkl')
 
-UTT_SCORES = 'utterance-scores'
-COOKIE_NAME = 'cookie-hash'
-# log(utterances[0:2])
-
 #initialize_redis_db
-# r.flushdb()
-# status = None
 status = r.get('status')
 if status:
     status = status.decode('utf-8')
@@ -93,14 +91,13 @@ def get_response_by_index(index, cookie_hash):
     return resp
 
 
-def annotate_redis(yesno, index, ip_addr):
-    cookie_hash = request.cookies.get(COOKIE_NAME)
+def annotate_redis(yesno, index, ip_addr, cookie_hash):
     # log('annotate: {}'.format(cookie_hash))
-    if not cookie_hash:
-        return None
+    timestamp = time.time()
     annotation = r.get('{}:{}'.format(
         cookie_hash, index))  # previous annotation of utterance by that user
     if annotation:
+        # log(annotation.decode('utf-8'))
         str_index = int(annotation.decode('utf-8').split(':')[1])
         r.setrange(index, str_index, yesno)  #sets str_index to yesno value
     else:
@@ -109,13 +106,19 @@ def annotate_redis(yesno, index, ip_addr):
         # log('incrementing index {}, before_val: {}, value: {}'.format(
         #     index, before, r.zscore(UTT_SCORES, index)))
         str_index = r.append(index, yesno) - 1
-    timestamp = time.time()
-    r.set('{}:{}'.format(cookie_hash, index), '{}:{}:{}'.format(
-        yesno, str_index, timestamp))
+    r.set('{}:{}'.format(cookie_hash, index), '{}:{}:{}:{}'.format(
+        yesno, str_index, timestamp, ip_addr))
     r.set('{}:{}'.format(ip_addr, index), '{}:{}:{}:{}'.format(
         yesno, str_index, timestamp, cookie_hash))
+    undo_cookie_key = 'undo:' + cookie_hash
+    first_undo_action = r.rpop(undo_cookie_key)
+    if first_undo_action:
+        first_undo_action = first_undo_action.decode('utf-8')
+        if first_undo_action.split(':')[1] != str(index):
+            r.lpush(cookie_hash, first_undo_action)
+    while (r.llen(undo_cookie_key) != 0):
+        r.rpoplpush(undo_cookie_key, cookie_hash)
     r.lpush(cookie_hash, '{}:{}:{}'.format(yesno, index, str_index))
-    return cookie_hash
 
 
 def set_cookie(js_hash):
@@ -137,33 +140,76 @@ def set_cookie(js_hash):
     return cookie_hash
 
 
+def ip_cookies_violation(ttl):
+    if ttl <= 0:
+        return None
+    else:
+        m, s = divmod(ttl, 60)
+        h, m = divmod(m, 60)
+        hour_str = f'{h} godz. ' if h != 0 else ''
+        minute_str = f'{m} min ' if m != 0 else ''
+        wait_time_str = hour_str + minute_str + f'{s} sek.'
+        return jsonify(wait_time_str=wait_time_str)
+
+
+def undo(cookie_hash):
+    last_action = r.lpop(cookie_hash)
+    if last_action:
+        last_action = last_action.decode('utf-8')
+        r.rpush('undo:' + cookie_hash, last_action)
+        index = int(last_action.split(':')[1])
+        return get_response_by_index(index, cookie_hash)
+    # if no cookie-hash or action list is empty resp = None
+
+
+def handle_ip_cookies(ip_key, cookie_hash):
+    """mechanism for forcing users to use X cookies per ip but no more than X"""
+    r.sadd(ip_key, cookie_hash)
+    if int(r.ttl(ip_key)) == -1:
+        r.expire(ip_key, 60 * 60 * 3)
+        log('{}, expire started'.format(ip_key))
+
+
+def get(cookie_hash):
+    undo_cookie_key = 'undo:' + cookie_hash
+    while (r.llen(undo_cookie_key) != 0):
+        r.rpoplpush(undo_cookie_key, cookie_hash)
+    return get_next_response(cookie_hash)
+
+
 def http_post():
-    index = str(request.form.get('index'))
+    resp = None
     action = request.form['action']
+    index = int(request.form['index']) if action != 'get' else None
     js_hash = request.form['hash']
     ip_addr = str(request.headers.get('X-Real-Ip', request.remote_addr))
+    ip_key = 'ip-cookies:' + ip_addr
+    ip_key_scard = r.scard(ip_key)
+    if ip_key_scard >= MAX_COOKIES_PER_IP:
+        ttl = int(r.ttl(ip_key))
+        app.logger.warning(
+            f'MAX_COOKIES_PER_IP violation! ip: {ip_addr}, ttl: {ttl}, scard: {ip_key_scard}, action: {action}, index: {index}'
+        )
+        return ip_cookies_violation(ttl)
     if action == 'get':
         cookie_hash = set_cookie(js_hash)
-        resp = get_next_response(cookie_hash)
-    elif action == 'undo':
+        resp = get(cookie_hash)
+    else:
         cookie_hash = request.cookies.get(COOKIE_NAME)
-        if cookie_hash:
-            last_action = r.lpop(cookie_hash)
-            if last_action:
-                index = int(last_action.decode('utf-8').split(':')[1])
-                resp = get_response_by_index(index, cookie_hash)
-        # if no cookie-hash or action list is empty resp = None
+        if not cookie_hash:
+            return None
+    if action == 'undo':
+        resp = undo(cookie_hash)
     elif action == 'yes':
-        cookie_hash = annotate_redis('y', index, ip_addr)
-        if cookie_hash:
-            resp = get_next_response(cookie_hash)
+        annotate_redis('y', index, ip_addr, cookie_hash)
+        resp = get_next_response(cookie_hash)
     elif action == 'no':
-        cookie_hash = annotate_redis('n', index, ip_addr)
-        if cookie_hash:
-            resp = get_next_response(cookie_hash)
+        annotate_redis('n', index, ip_addr, cookie_hash)
+        resp = get_next_response(cookie_hash)
     if resp:
         # r.sadd
-        log(f'ip: {ip_addr}, cookie: {cookie_hash}, hash: {js_hash}, action: {action}, index: {index}'
+        handle_ip_cookies(ip_key, cookie_hash)
+        log(f'ip: {ip_addr}, cookie: {cookie_hash}, hash: {js_hash}, action: {action}, index: {index}, ip_scard_before_req: {ip_key_scard}'
             )
         return resp
 
