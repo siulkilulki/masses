@@ -52,8 +52,8 @@ def get_next():
     hour = utterances[index]['hour'].replace('\n', '<br>')
     right_context = ' '.join(
         utterances[index]['suffix'].split(' ')[:10]).replace('\n', '<br>')
-    log('get_next index: {}, score: {}'.format(index,
-                                               r.zscore(UTT_SCORES, index)))
+    # log('get_next index: {}, score: {}'.format(index,
+    #                                            r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
 
 
@@ -224,6 +224,18 @@ def root():
         return http_post()
     else:
         return http_get()
+
+
+@app.route("/hidden", methods=['GET', 'POST'])
+def dev_root():
+    ip_addr = str(request.headers.get('X-Real-Ip', request.remote_addr))
+    cookie_hash = request.cookies.get(COOKIE_NAME)
+    if ip_addr != '192.168.1.1' and cookie_hash != '1594469046':
+        return None
+    if request.method == 'POST':
+        return http_post()
+    else:
+        return render_template('index-dev.html')
 
 
 if __name__ == "__main__":

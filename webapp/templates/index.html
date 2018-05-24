@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="pl">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -12,35 +13,153 @@
 </head>
 <!-- Begin Cookie Consent script https://cookiescript.info/ -->
 <link rel="stylesheet" type="text/css" href="//cookiescriptcdn.pro/libs/cookieconsent.7.min.css" />
-<a id="cookieconsent:learn_more" aria-label="learn more about cookies" role=button tabindex="0" class="cc-link" href="https://cookie-policy.org/" target="_blank">Więcej informacji</a><script>var cookieconsent_ts = 1526746886226; var learnmore2 = document.getElementById("cookieconsent:learn_more");learnmore2.setAttribute("style", "display:none");</script>
+<a id="cookieconsent:learn_more" aria-label="learn more about cookies" role=button tabindex="0" class="cc-link" href="https://cookie-policy.org/" target="_blank">Więcej informacji</a>
+<script>
+    var cookieconsent_ts = 1526746886226;
+    var learnmore2 = document.getElementById("cookieconsent:learn_more");
+    learnmore2.setAttribute("style", "display:none");
+</script>
 <script src="//cookiescriptcdn.pro/libs/cookieconsent.7.min.js"></script>
 <script>
-window.addEventListener("load", function(){
-window.cookieconsent.initialise({
-  "palette": {
-    "popup": {
-      "background": "#000"
-    },
-    "button": {
-      "background": "#f1d600"
-    }
-  },
-  "theme": "classic",
-  "content": {
-    "message": "Ta strona używa ciasteczek.",
-    "dismiss": "Ok",
-    "link": "Więcej informacji",
-    "href": "http://wszystkoociasteczkach.pl/po-co-sa-ciasteczka/"
-  }
-})});
+    window.addEventListener("load", function() {
+        window.cookieconsent.initialise({
+            "palette": {
+                "popup": {
+                    "background": "#000"
+                },
+                "button": {
+                    "background": "#f1d600"
+                }
+            },
+            "theme": "classic",
+            "content": {
+                "message": "Ta strona używa ciasteczek.",
+                "dismiss": "Ok",
+                "link": "Więcej informacji",
+                "href": "http://wszystkoociasteczkach.pl/po-co-sa-ciasteczka/"
+            }
+        })
+    });
 </script>
 <noscript><a href="https://cookiescript.info/">Cookie consent script</a></noscript>
 <!-- End Cookie Consent script -->
+
 <body>
+    <!-- Modal -->
+    <div class="modal fade" data-backdrop="static" data-keyboard="false" id="howtoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Instrukcja oznaczania - proszę uważnie przeczytać!</h5>
+                    <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close"> -->
+                    <!-- <span aria-hidden="true">&times;</span> -->
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h5>Krótki opis</h5>
+                    <p> W szarym prostokącie znajduje się tekst ze strony parafialnej. W tym tekście na żółto podświetlona jest jakaś godzina. Jeśli podświetlona godzina jest godziną rozpoczęcia mszy świętej to naciśnij przycisk <a href="#" role="button" class="btn btn-success" title="Tak" data-content="">Tak</a>, w przeciwnym wypadku naciśnij <a href="#" role="button" class="btn btn-danger" title="Nie" data-content="">Nie</a>.</p>
+
+                    <h6 class="text-danger">Uwaga!</h6>
+                    <p class="text-danger"> Zwróć uwagę, na to że mszą świętą często nie są nabożeństwa, modlitwy różańcowe, spowiedź itp. Nie zawsze jak jest ładna godzina typu <strong>18:30</strong> to jest to godzina rozpoczęcia mszy świętej. Zastanów się zanim klikniesz!</p>
+                    <h5> Kiedy nacisnąć "Tak"</h5>
+                    <ul>
+                        <li>jak jesteś pewien lub prawie pewien, że na żółto podświetlono godzinę mszy</li>
+                    </ul>
+                    <h5> Kiedy nacisnąć "Nie"</h5>
+                        <ul>
+                            <li>jeśli nie jesteś pewien czy zaznaczono godzinę rozpoczęcia mszy</li>
+                            <li> jeśli zupełnie nie wiesz czy zazanaczono godzinę rozpoczęcia mszy</li>
+                        </ul>
+                    <h5> Co jeśli się pomyliłem</h5>
+                    <p> Jeśli się pomyliłeś nacisńij przycisk <a href="#" role="button" class="btn btn-warning" title="Cofnij" data-content="">Cofnij</a> znajdujący się w lewym górnym rogu. Możesz cofać tak długo, aż znajdziesz swoją pomyłkę. Najbliżej znajdują się Twoje ostatnio oznaczone kawałki.</p>
+                    <h5>Przykłady</h5>
+                    <div class="modal-content">
+                        <p>Różaniec o godzinie 16.30
+                            Adwent
+                            Godzinki każdego dnia o godz. <strong class="bg-warning">6.30</strong> i Msza Święta roratnia o godz. 6.45
+                            Wielki Post
+                            Droga krzyżowa w piątki o godz. 16.15
+                            Gorzkie żale w niedziele o godz. 16.15</p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-danger btn-sm" title="Nie" data-content="">Nie</a>  </p>
+                    </div>
+                    <!-- <a href="#" role="button" class="btn btn-danger btn-sm" title="Nie" data-content="">Nie</a> -->
+                    <!-- <a href="#" role="button" class="btn btn-success btn-sm" title="Tak" data-content="">Tak</a> -->
+                    <div class="modal-content">
+                        <p>szablon
+                            Adoracja Najświętszego Sakramentu: Każdy piątek w Kaplicy Całunu
+                            Turyńskiego od godz. <strong class="bg-warning">7.30</strong> do 12.00 (w I piątek miesiąca od godz. 9.30 - 12.00)
+                            </p>
+
+                            <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-danger btn-sm" title="Nie" data-content="">Nie</a>  </p>
+                    </div>
+                    <div class="modal-content">
+                        <p> Październik - Nabożeństwo Różańcowe:
+                            codziennie o godz. 17.30
+                             <strong class="bg-warning">17.30</strong>
+                        </p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-danger btn-sm" title="Nie" data-content="">Nie</a>  </p>
+                    </div>
+                    <div class="modal-content">
+                        <p>
+                            Pogrzeby – codziennie w tygodniu.
+                            Spowiedź – w czasie każdej Mszy św. oraz I piątek m-ca g. <strong class="bg-warning">6.30</strong> – 8.30; 15.30
+                            -19.00.
+                        </p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-danger btn-sm" title="Nie" data-content="">Nie</a>  </p>
+                    </div>
+                    <div class="modal-content">
+                        <p>
+                            W niedzielę i uroczystości:
+                            7:30, 9:00, 10:30, 12:00, 18:00, 20:00 (po łacinie w okresie letnim (lipiec -
+                            sierpień))
+                            w sobotę o 18:00:
+                            Msza Święta niedzielna
+                            W tygodniu:
+                            7:00, 8:30, 18:00
+                            W święta zniesione:
+                            <strong class="bg-warning">7:00</strong>, 9:00, 16:30, 18:00
+
+                        </p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-success btn-sm" title="Tak" data-content="">Tak</a> </p>
+                    </div>
+                    <div class="modal-content">
+                        <p>
+                            ###### Msza św. dla dzieci niepełnosprawnych
+                            w 3-ą niedzielę miesiąca o godz. 14.00
+                            ####
+                            Kaplica zakonna przy Szpitalu Powiatowym:
+
+                            poniedziałek - godz. <strong class="bg-warning">7.00</strong>
+                            środa - godz. 7.00
+                        </p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-success btn-sm" title="Tak" data-content="">Tak</a> </p>
+                    </div>
+                    <div class="modal-content">
+                        <p>
+                            NIEDZIELA 24 GRUDNIA (WIGILIA)<br>
+                            8.00, <strong class="bg-warning">10.00</strong>, 12.00
+                            PONIEDZIAŁEK 25 GRUDNIA ( I DZIEŃ BOŻEGO NARODZENIA)
+                            <br>
+                            PASTERKA:<br>
+                            SZARLEJ 22.00<br>
+                            BAZYLIKA 24.00
+                        </p>
+                        <p>Poprawne kliknięcie: <a href="#" role="button" class="btn btn-success btn-sm" title="Tak" data-content="">Tak</a> </p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Zamknij</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="container">
         <div class="container mt-2">
             <div class="row justify-content-start">
                 <button type="button" class="btn btn-warning btn-sm" id="undo">Cofnij</button>
+                <button type="button" class="btn btn-primary ml-1" data-toggle="modal" data-target="#howtoModal">
+                    Instrukcja obsługi
+                </button>
             </div>
             <div class="row justify-content-center">
                 <h2>Czy zaznaczono godzinę rozpoczęcia mszy świętej?</h2>
@@ -59,10 +178,19 @@ window.cookieconsent.initialise({
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='hash.min.js') }}"></script>
     <script type="text/javascript">
-        /* console.log('index = ' + {{index}}) */
+        $(document).ready(function() {
+            if (Cookies.get("pop") == null) {
+                $("#howtoModal").modal("show");
+                Cookies.set("pop", "value", {
+                    expires: 2
+                });
+            }
+        });
+
         function update_content(dict) {
             document.getElementById("content").innerHTML = `<p class="lead">${dict.left_context}<strong class="bg-warning h4">${dict.hour}</strong>${dict.right_context}</p>`
         }

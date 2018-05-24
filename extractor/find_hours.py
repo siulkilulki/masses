@@ -52,5 +52,5 @@ def hours_iterator(text, minsize=20, color=False):
 # w klasyfikatorze dzielić tak aby jeszcze \n było oddzielnie
 
 
-def color_hour(prefix, hour, suffix, color, style):
+def color_hour(prefix, hour, suffix, color=Fore.GREEN, style=Style.BRIGHT):
     return prefix + color + style + hour + Style.RESET_ALL + suffix
