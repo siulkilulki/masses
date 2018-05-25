@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, make_response, jsonify
+import secrets
 import time
-import os
 from get_utterances import Utterance
 import redis
 import pickle
@@ -46,19 +46,37 @@ if status != 'filled':
     status = 'filled'
 
 
-def get_next():
-    index = int(r.zrangebyscore(UTT_SCORES, '-inf', 'inf')[1])
+def get_utterance_for_web(index):
     left_context = utterances[index]['prefix'].replace('\n', '<br>')
     hour = utterances[index]['hour'].replace('\n', '<br>')
     right_context = ' '.join(
         utterances[index]['suffix'].split(' ')[:10]).replace('\n', '<br>')
+    return left_context, hour, right_context
+
+
+def find_not_annotated(cookie_hash):
+    # XXX: should be effecient enough even though it's O(n)
+    for index in range(len(utterances)):
+        if not r.exists(f'{cookie_hash}:{index}'):
+            return index
+
+
+def get_next(cookie_hash):
+    """returns utterance with minmum annotations if that utterance
+    wasn't annotated by cookie_hash user
+    or not yet annotated utterance by cookie_hash user"""
+    index = int(r.zrangebyscore(UTT_SCORES, '-inf', 'inf')[1])
+    if r.exists(f'{cookie_hash}:{index}'):
+        index = find_not_annotated(cookie_hash)
+        log('found unannotated index: {}'.format(index))
+    left_context, hour, right_context = get_utterance_for_web(index)
     # log('get_next index: {}, score: {}'.format(index,
     #                                            r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
 
 
 def get_next_response(cookie_hash):
-    index, left_context, hour, right_context = get_next()
+    index, left_context, hour, right_context = get_next(cookie_hash)
     resp = jsonify(
         index=index,
         left_context=left_context,
@@ -70,10 +88,7 @@ def get_next_response(cookie_hash):
 
 
 def get_by_index(index):
-    left_context = utterances[index]['prefix'].replace('\n', '<br>')
-    hour = utterances[index]['hour'].replace('\n', '<br>')
-    right_context = ' '.join(
-        utterances[index]['suffix'].split(' ')[:10]).replace('\n', '<br>')
+    left_context, hour, right_context = get_utterance_for_web(index)
     # log('get_next index: {}, score: {}'.format(index,
     # r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
@@ -124,13 +139,13 @@ def annotate_redis(yesno, index, ip_addr, cookie_hash):
 def set_cookie(js_hash):
     ## TODO:  dodawać nowe js_hash do listy z key bedacym cookie_hash | czy trzeba?
     old_cookie_hash = None
+    js_hash_key = 'jshash:' + js_hash
     cookie_hash = request.cookies.get(COOKIE_NAME)
     if not cookie_hash:
-        old_cookie_hash = r.get(js_hash)
+        old_cookie_hash = r.get(js_hash_key)
         if not old_cookie_hash:
-            cookie_hash = str(
-                int.from_bytes(os.urandom(4), byteorder='little'))
-            r.set(js_hash, cookie_hash)
+            cookie_hash = secrets.token_urlsafe(16)
+            r.set(js_hash_key, cookie_hash)
             log('Cookie not on client side. Creating new cookie.')
         else:
             log('Cookie not on client side. Getting cookie from fingerprint.')
@@ -159,11 +174,12 @@ def undo(cookie_hash):
         r.rpush('undo:' + cookie_hash, last_action)
         index = int(last_action.split(':')[1])
         return get_response_by_index(index, cookie_hash)
+    log('No last action returning None')
     # if no cookie-hash or action list is empty resp = None
 
 
 def handle_ip_cookies(ip_key, cookie_hash):
-    """mechanism for forcing users to use X cookies per ip but no more than X"""
+    """mechanism for forcing users to use maximum X cookies per ip but no more than X"""
     r.sadd(ip_key, cookie_hash)
     if int(r.ttl(ip_key)) == -1:
         r.expire(ip_key, 60 * 60 * 3)
@@ -197,6 +213,7 @@ def http_post():
     else:
         cookie_hash = request.cookies.get(COOKIE_NAME)
         if not cookie_hash:
+            log('No cookie hash given by client')
             return None
     if action == 'undo':
         resp = undo(cookie_hash)

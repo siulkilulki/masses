@@ -84,6 +84,11 @@ def main():
         investigate_by_cookie(sys.argv[2])
     elif sys.argv[1] == 'index':
         pprint_utterance(int(sys.argv[2]))
+    elif sys.argv[1] == 'console':
+        import ipdb
+        ipdb.set_trace()
+    elif sys.argv[1] == 'exec':
+        exec('print(r.{})'.format(sys.argv[2]), {'print': print, 'r': r})
 
 
 if __name__ == '__main__':
