@@ -65,13 +65,13 @@ def get_next(cookie_hash):
     """returns utterance with minmum annotations if that utterance
     wasn't annotated by cookie_hash user
     or not yet annotated utterance by cookie_hash user"""
-    index = int(r.zrangebyscore(UTT_SCORES, '-inf', 'inf')[1])
+    index = int(r.zrangebyscore(UTT_SCORES, '-inf', 'inf', start=0, num=1)[0])
     if r.exists(f'{cookie_hash}:{index}'):
         index = find_not_annotated(cookie_hash)
         log('found unannotated index: {}'.format(index))
     left_context, hour, right_context = get_utterance_for_web(index)
-    # log('get_next index: {}, score: {}'.format(index,
-    #                                            r.zscore(UTT_SCORES, index)))
+    log('get_next index: {}, score: {}'.format(index,
+                                               r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
 
 

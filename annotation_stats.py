@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
+import argparse
 import redis
 from extractor.find_hours import color_hour
 import pickle
@@ -77,18 +78,42 @@ def print_stats():
     print('Annotated utterances: {}'.format(len(annotated)))
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    subparser = parser.add_subparsers(dest='cmd')
+    parser_stats = subparser.add_parser('stats', help='Show annotation stats.')
+    parser_investigate = subparser.add_parser(
+        'investigate', help='investigate cookie.')
+    parser_investigate.add_argument('cookie', help='User cookie string')
+    parser_index = subparser.add_parser('index', help='Print utterance.')
+    parser_index.add_argument('index', type=int, help='Utterance index')
+    subparser.add_parser('ipdb', help='Get into ipdb.')
+    parser_exec = subparser.add_parser('exec', help='Execute redis command.')
+    parser_exec.add_argument(
+        'redis_command',
+        help=
+        'Redis command (lowercased). e.g. to get r.zrangebyscore("key", "-inf", "inf", start=0, num=1) pass \'zrangebyscore("key", "-inf", "inf", start=0, num=1)\''
+    )
+
+    return parser.parse_args()
+
+
 def main():
-    if sys.argv[1] == 'stats':
+    args = get_args()
+    if args.cmd == 'stats':
         print_stats()
-    elif sys.argv[1] == 'investigate':
-        investigate_by_cookie(sys.argv[2])
-    elif sys.argv[1] == 'index':
-        pprint_utterance(int(sys.argv[2]))
-    elif sys.argv[1] == 'console':
+    elif args.cmd == 'investigate':
+        investigate_by_cookie(args.cookie)
+    elif args.cmd == 'index':
+        pprint_utterance(args.index)
+    elif args.cmd == 'ipdb':
         import ipdb
         ipdb.set_trace()
-    elif sys.argv[1] == 'exec':
-        exec('print(r.{})'.format(sys.argv[2]), {'print': print, 'r': r})
+    elif args.cmd == 'exec':
+        exec('print(r.{})'.format(args.redis_command), {
+            'print': print,
+            'r': r
+        })
 
 
 if __name__ == '__main__':
