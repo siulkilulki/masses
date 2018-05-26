@@ -1,3 +1,76 @@
+"""
+### REDIS data structures in annotator:
+
+
+ STRINGS:
+
+    'status'
+        ---> {'filled', None, other_string}
+
+            'filled'
+                indicate that utterance-scores are properly filled
+                with utterance ids
+            None
+                clears database
+            other non empty value
+                adds non existance utterances and sets their score to 0
+
+    '{cookie}:{index}'
+        ---> '{yesno}:{str_index}:{timestamp}:{ip_addr}'
+
+    '{ip_addr}:{index}'
+        ---> '{yesno}:{str_index}:{timestamp}:{cookie}'
+
+    '{index}'
+        ---> '[yYnNtf]*' e.g. 'ynyNYnynYytf'
+
+            y
+                uncertain yes
+            t
+                banned yes
+            Y
+                trusted yes (not handled yet)
+            n
+                uncertain no
+            N
+                trusted no (not handled yet)
+            f
+                banned no
+
+    'jshash:{js_hash}'
+        ---> '{cookie}'
+
+
+ LISTS:
+
+    '{cookie}'
+        ---> '{yesno}:{index}:{str_index}'
+
+    'undo:{cookie}'
+        ---> '{yesno}:{index}:{str_index}'
+
+
+ SETS:
+
+    'ip-cookies:{ip_addr}'
+        ---> '{cookie}'
+            expires after 3 hours
+
+    'trusted'
+        ---> '{cookie}'
+            trusted because I know this person
+
+    'trusted-checked'
+        ---> '{cookie}'
+
+    'banned'
+        ---> '{cookie}'
+
+
+ SORTED SETS:
+    'utterance-scores'
+        ---> {index} ---> {nr_of_annotations}
+"""
 from flask import Flask, render_template, request, make_response, jsonify
 import secrets
 import time
@@ -70,8 +143,8 @@ def get_next(cookie_hash):
         index = find_not_annotated(cookie_hash)
         log('found unannotated index: {}'.format(index))
     left_context, hour, right_context = get_utterance_for_web(index)
-    log('get_next index: {}, score: {}'.format(index,
-                                               r.zscore(UTT_SCORES, index)))
+    # log('get_next index: {}, score: {}'.format(index,
+    #                                            r.zscore(UTT_SCORES, index)))
     return index, left_context, hour, right_context
 
 
@@ -108,18 +181,18 @@ def get_response_by_index(index, cookie_hash):
 
 def annotate_redis(yesno, index, ip_addr, cookie_hash):
     # log('annotate: {}'.format(cookie_hash))
+    banned = r.sismember('banned', cookie_hash)
+    if banned:
+        yesno = yesno.translate(str.maketrans('yn', 'tf'))
     timestamp = time.time()
     annotation = r.get('{}:{}'.format(
         cookie_hash, index))  # previous annotation of utterance by that user
     if annotation:
-        # log(annotation.decode('utf-8'))
         str_index = int(annotation.decode('utf-8').split(':')[1])
         r.setrange(index, str_index, yesno)  #sets str_index to yesno value
     else:
-        # before = r.zscore(UTT_SCORES, index)
-        r.zincrby(UTT_SCORES, index)
-        # log('incrementing index {}, before_val: {}, value: {}'.format(
-        #     index, before, r.zscore(UTT_SCORES, index)))
+        if not banned:
+            r.zincrby(UTT_SCORES, index)
         str_index = r.append(index, yesno) - 1
     r.set('{}:{}'.format(cookie_hash, index), '{}:{}:{}:{}'.format(
         yesno, str_index, timestamp, ip_addr))
