@@ -9,7 +9,7 @@ from colorama import Fore, Back, Style
 import time
 import datetime
 import re
-from collections import defaultdict
+from collections import defaultdict, Counter
 import math
 
 r = redis.StrictRedis(unix_socket_path='/redis-socket/redis.sock', db=0)
@@ -193,9 +193,36 @@ def print_sorted(users_dict, sortby='annotations max'):
             str(user_dict['breaks']), status
         ]))
 
-def 2tsv():
-    pass
-    
+
+def redis2tsv():
+    print('\t'.join([
+        'prefix', 'hour', 'suffix', 'is_mass', 'yes_count', 'no_count', 'url',
+        'button_text', 'depth', 'filepath', 'line_no'
+    ]))
+    for index, utterance in enumerate(utterances):
+        utterance_annotations = r.get(index)
+        if utterance_annotations:
+            utterance_annotations = utterance_annotations.decode('utf-8')
+        if utterance_annotations and re.search('[yYnN]',
+                                               utterance_annotations):
+            annotations_counts = Counter(utterance_annotations.lower())
+            if annotations_counts['y'] > annotations_counts['n']:
+                is_mass = 'no'
+            elif annotations_counts['y'] < annotations_counts['n']:
+                is_mass = 'yes'
+            else:
+                continue
+            trans_table = str.maketrans({'\x00': '', '\n': '\\n'})
+            print('\t'.join([
+                utterance['prefix'].translate(trans_table),
+                utterance['hour'].translate(trans_table),
+                utterance['suffix'].translate(trans_table), is_mass,
+                str(annotations_counts['y']),
+                str(annotations_counts['n']), utterance['url'],
+                utterance['button_text'],
+                str(utterance['depth']), utterance['filepath'],
+                str(utterance['line_no'])
+            ]))
 
 
 def get_args():
@@ -235,7 +262,7 @@ def main():
     elif args.cmd == 'ban':
         ban(args.cookie)
     elif args.cmd == '2tsv':
-        2tsv()
+        redis2tsv()
     elif args.cmd == 'ipdb':
         import ipdb
         ipdb.set_trace()
