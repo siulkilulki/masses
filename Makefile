@@ -3,9 +3,28 @@ PREPARE_ENVIRONMENT := $(shell ./prepare-environment.sh > /tmp/makeenv)
 include /tmp/makeenv
 JOBS := 100
 
-.PHONY: all update data clean clean-data clean-cache
+.PHONY: all update data clean clean-data clean-cache clean-ml
 
 all: data
+
+# annotator_console.py needs running redis instance
+# move belo
+score.txt: predicted.txt test.txt
+	paste $< <(egrep -o "__label__(yes|no)" $(word 2,$^)) | ./evaluate.py > $@
+
+predicted.txt: fs-model.bin test.txt
+	./fasttext predict $<  $(word 2,$^) > $@
+
+fs-model.bin: train.txt
+	./fasttext supervised -input $< -output `basename $@ .bin`
+
+train.txt test.txt dev.txt: ./annotator_console.py tsv2fasttext.py split-data.sh
+	./$< 2tsv | ./$(word 2,$^) > all.txt
+	./split-data.sh all.txt
+	rm all.txt
+
+clean-ml:
+	rm -f train.txt test.txt dev.txt fs-model* predicted.txt score.txt
 
 parish2text: parishwebsites/parish2text.py parishwebsites/parish2text-commands.sh
 	mkdir -p parishwebsites/{text-data,text-data-logs}

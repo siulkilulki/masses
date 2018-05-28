@@ -1,0 +1,19 @@
+** Backlog
+*** TODO odsiać binarny content
+*** TODO przetestować find_new_key
+*** TODO napisać testy do annotatora
+*** TODO obsłużyć w annotatorze częściowe godziny typu: 7,00 | 7 00 | 700
+*** TODO handle column pages http://parafiawincentegoapaulo.pl/msze.html
+*** TODO handle <sup> and <sub> tags e.g.
+    Msze od poniedziałku do soboty rano o godzinie 6<sup>45 </sup>`
+*** TODO Change to levelDB database for cache
+*** TODO crawling non domain masses
+    Scraper shouldn't crawl these types of urls:
+https://www.tumblr.com/widgets/share/tool/preview?shareSource=legacy&canonicalUrl=&url=http%3A%2F%2Falbert.zgora.pl%2F2014%2F08%2Fbierzmowanie%2F&title=Bierzmowanie
+
+Came from:
+http://albert.zgora.pl/2014/08/bierzmowanie/
+*** TODO dostęp do redisa bez sudo
+** W1
+*** TODO dodać ogłoszenia na duzych portalach katolickich
+*** TODO alogrytm do odzielenia trusted od untrusted users

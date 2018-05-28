@@ -119,6 +119,11 @@ def users_stats():
             else:
                 yesno, str_index, timestamp = res_list
                 ip_addr = '0'
+            if 'last_access' not in users_dict[user]:
+                users_dict[user]['last_access'] = float(timestamp)
+            else:
+                users_dict[user]['last_access'] = max(
+                    float(timestamp), users_dict[user]['last_access'])
             if 'yes_count' not in users_dict[user]:
                 users_dict[user]['yes_count'] = 0
             if 'no_count' not in users_dict[user]:
@@ -161,14 +166,15 @@ def calculate_avg_annotation_time(users_dict, max_interval=10):
         if delta_sum == 0:
             user_dict['avg_time'] = math.inf
         else:
-            user_dict['avg_time'] = delta_sum / divider
+            user_dict['avg_time'] = round(delta_sum / divider, 4)
         user_dict['breaks'] = breaks
 
 
 def print_sorted(users_dict, sortby='annotations max'):
-    print('\t'.join(
-        ['cookie', 'annotations', 'yes', 'no', 'avg_time', 'breaks',
-         'status']))
+    print('\t'.join([
+        'cookie', 'annotations', 'yes', 'no', 'avg_time', 'breaks', 'status',
+        'last_access'
+    ]))
     if sortby == 'annotations max':
         keyfunc = lambda x: len(x[1]['annotations'])
     for user, user_dict in sorted(
@@ -190,7 +196,8 @@ def print_sorted(users_dict, sortby='annotations max'):
             str(user_dict['yes_count']),
             str(user_dict['no_count']),
             str(user_dict['avg_time']),
-            str(user_dict['breaks']), status
+            str(user_dict['breaks']), status,
+            format_time(user_dict['last_access'])
         ]))
 
 
