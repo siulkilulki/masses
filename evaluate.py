@@ -43,7 +43,7 @@ false_omission_rate = 1 - negative_predictive_value  # or false_negative / (fals
 accuracy = (true_positive + true_negative) / (positive + negative)
 
 f1 = 2 * (precision * recall) / (precision + recall)
-mcc = (true_positive * true_negative) - (false_positive * false_negative) / (
+mcc = ((true_positive * true_negative) - (false_positive * false_negative)) / (
     (true_positive + false_positive) * (true_positive + false_negative) *
     (true_negative + false_positive) * (true_negative + false_negative))**0.5
 
@@ -52,4 +52,5 @@ print(f"""
 Precision  =  {precision}
        F1  =  {f1}
  Accuracy  =  {accuracy}
+      MCC  =  {mcc}
 """)

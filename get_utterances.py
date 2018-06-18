@@ -66,7 +66,7 @@ def has_mass_metadata(url, button_text, page):
     elif url_match and not bad_url_match:
         # print('url_match: {}'.format(url_match.group(0)))
         return True
-    elif button_match and not button_match:
+    elif button_match and not bad_button_match:
         # print('button_match: {}'.format(button_match.group(0)))
         return True
     return False

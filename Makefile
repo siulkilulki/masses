@@ -16,10 +16,11 @@ predicted.txt: fs-model.bin test.txt
 	./fasttext predict $<  $(word 2,$^) > $@
 
 fs-model.bin: train.txt
-	./fasttext supervised -input $< -output `basename $@ .bin`
+	./fasttext supervised -input $< -output `basename $@ .bin` #-dim 300 -ws 10 -wordNgrams 2 -loss ns
 
 train.txt test.txt dev.txt: ./annotator_console.py tsv2fasttext.py split-data.sh
 	./$< 2tsv | ./$(word 2,$^) > all.txt
+# paste -d ' ' <(cut -f1 -d' ' all.txt) <(cut -d' ' -f2- all.txt | ./tokenizer.perl -threads 12 -l pl) | sponge all.txt
 	./split-data.sh all.txt
 	rm all.txt
 
